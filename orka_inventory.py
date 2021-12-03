@@ -125,3 +125,4 @@ if __name__ == '__main__':
     args = parse_args()
     name_contains = os.environ.get('ANSIBLE_NAME_CONTAINS')
     main(args, name_contains)
+    
