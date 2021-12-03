@@ -14,6 +14,7 @@ class SpinUpOrkaVM:
 		self.orka_pass = os.environ['ORKA_PASS']
 		self.core_count = os.environ['CORE_COUNT']
 		self.vcpu_count = os.environ['VCPU_COUNT']
+		self.orka_base_image = '90GBigSurSSH.img'
 
 	def get_auth_token(self):
 		data = {'email': self.orka_user, 'password': self.orka_pass}
