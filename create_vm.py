@@ -1,9 +1,6 @@
 import json
 import os
-import random
 import requests
-import string
-import time
 
 class SpinUpOrkaVM:
 	def __init__(self):
