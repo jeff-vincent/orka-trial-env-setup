@@ -3,7 +3,8 @@ RUN apk update
 RUN apk add --update \
 	ansible \
 	bash \
-	curl
+	curl \
+    openssh
 RUN apk add --upgrade openconnect
 RUN python3 -m pip install requests
 COPY . .

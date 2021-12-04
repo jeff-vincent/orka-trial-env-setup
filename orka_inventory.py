@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
 import argparse
 import json
@@ -37,9 +37,12 @@ class OrkaAnsibleInventory:
     def get_current_vm_data(self):
         self.spin_up.get_auth_token()
         token = self.spin_up.token
-        headers = {f"Authorization: Bearer {token}"}
-        response = requests.get('http://10.221.188.100/resources/vm/list', headers=headers)
-        data = json.loads(response)
+        headers = {
+			'Content-Type': 'application/json', 
+			'Authorization': f"Bearer {token}"
+		}
+        r = requests.get('http://10.221.188.100/resources/vm/list', headers=headers)
+        data = r.json()
         self.vm_data = data['virtual_machine_resources']
         self.spin_up.revoke_orka_auth_token()
 
