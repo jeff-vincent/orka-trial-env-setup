@@ -46,9 +46,9 @@ class SpinUpOrkaVM:
 	def revoke_orka_auth_token(self):
 		url = f"{self.orka_address}/token"
 		headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {self.token}"
-        }
+            		'Content-Type': 'application/json',
+            		'Authorization': f"Bearer {self.token}"
+        	}
 		requests.delete(url, headers=headers)
 
 
