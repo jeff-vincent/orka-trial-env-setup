@@ -3,12 +3,14 @@
 import argparse
 import json
 import os
+import requests
 import subprocess
-
+from create_vm import SpinUpOrkaVM
 
 class OrkaAnsibleInventory:
 
     def __init__(self):
+        self.spin_up = SpinUpOrkaVM()
         self.vm_data = None
         self.filtered_data = None
         self.inventory = {
@@ -19,26 +21,32 @@ class OrkaAnsibleInventory:
             }
         }
 
+    # def get_current_vm_data(self):
+    #     """Get current VM data related to the current CLI user.
+    #     Note
+    #     ----
+    #     The user must be logged in to the Orka CLI.
+    #     """
+    #     completed_process = subprocess.run(
+    #         ['orka', 'vm', 'list', '--json'], 
+    #         capture_output=True)
+    #     dict_string = completed_process.stdout.decode('utf-8')
+    #     data = json.loads(dict_string)
+    #     self.vm_data = data['virtual_machine_resources']
 
     def get_current_vm_data(self):
-        """Get current VM data related to the current CLI user.
-        Note
-        ----
-        The user must be logged in to the Orka CLI.
-        """
-        completed_process = subprocess.run(
-            ['orka', 'vm', 'list', '--json'], 
-            capture_output=True)
-        dict_string = completed_process.stdout.decode('utf-8')
-        data = json.loads(dict_string)
+        self.spin_up.get_auth_token()
+        token = self.spin_up.token
+        headers = {f"Authorization: Bearer {token}"}
+        response = requests.get('http://10.221.188.100/resources/vm/list', headers=headers)
+        data = json.loads(response)
         self.vm_data = data['virtual_machine_resources']
-
+        self.spin_up.revoke_orka_auth_token()
 
     def get_deployed_vms(self):
         """Filter current VM data to isolate deployed VMs."""
         self.filtered_data = \
             [i for i in self.vm_data if i['vm_deployment_status'] == 'Deployed']
-
 
     def get_vm_by_host_name(self, host_name):
         """Filter current VM data to isolate named VM.
@@ -47,7 +55,6 @@ class OrkaAnsibleInventory:
         """
         self.filtered_data = \
             [i for i in self.vm_data if host_name == i['status'][0]['virtual_machine_name']]
-
 
     def get_name_contains_vms(self, name_contains):
         """Filter current VM data to isolate VMs by partial name match.
@@ -69,7 +76,6 @@ class OrkaAnsibleInventory:
     #         'ansible_ssh_user': ansible_ssh_user,
     #         'ansible_ssh_pass': ansible_ssh_pass
     #     }
-
 
     def create_inventory(self):
         """Create the inventory object to return to Ansible."""

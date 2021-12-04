@@ -24,14 +24,14 @@ class SpinUpOrkaVM:
 		headers = {
 			'Content-Type': 'application/json', 
 			'Authorization': f"Bearer {self.token}"
-			}
+		}
 		data = {
 			'orka_vm_name': self.vm_name,
 			'orka_base_image': self.orka_base_image,
 			'orka_image': self.vm_name,
 			'orka_cpu_core': int(self.core_count),
 			'vcpu_count': int(self.vcpu_count)
-			}
+		}
 		requests.post(orka_address, data=json.dumps(data), headers=headers)
         
 	def deploy_vm_config(self):
@@ -43,19 +43,20 @@ class SpinUpOrkaVM:
 		self.vm_ip = content['ip']
 		self.vm_ssh_port = content['ssh_port']
 
-	# def revoke_orka_auth_token(self):
-	# 	url = f"{self.orka_address}/token"
-	# 	headers = {
- #            	'Content-Type': 'application/json',
- #            	'Authorization': f"Bearer {self.token}"
- #            	}
-	# 	requests.delete(url, headers=headers)
+	def revoke_orka_auth_token(self):
+		url = f"{self.orka_address}/token"
+		headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {self.token}"
+        }
+		requests.delete(url, headers=headers)
 
 
 def main(spin_up):
 	spin_up.get_auth_token()
 	spin_up.create_vm_config()
 	spin_up.deploy_vm_config()
+	spin_up.revoke_orka_auth_token()
 	
 if __name__ == '__main__':
 	spin_up = SpinUpOrkaVM()
