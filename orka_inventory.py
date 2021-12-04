@@ -38,9 +38,9 @@ class OrkaAnsibleInventory:
         self.spin_up.get_auth_token()
         token = self.spin_up.token
         headers = {
-			'Content-Type': 'application/json', 
-			'Authorization': f"Bearer {token}"
-		}
+		'Content-Type': 'application/json', 
+		'Authorization': f"Bearer {token}"
+	}
         r = requests.get('http://10.221.188.100/resources/vm/list', headers=headers)
         data = r.json()
         self.vm_data = data['virtual_machine_resources']
