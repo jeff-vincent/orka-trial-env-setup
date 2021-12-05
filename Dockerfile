@@ -9,5 +9,5 @@ RUN apk add --update \
 RUN apk add --upgrade openconnect
 RUN python3 -m pip install requests
 COPY . .
-RUN mv profile /etc/profile
+RUN python3 set_env.py
 ENTRYPOINT ["./run.sh"]
