@@ -11,15 +11,22 @@ class OrkaAnsibleInventory:
 
     def __init__(self):
         self.spin_up = SpinUpOrkaVM()
+        self.orka_user = os.environ.get('ORKA_USER')
+        self.orka_license_key = os.environ.get('ORKA_LICENSE_KEY')
         self.vm_data = None
         self.filtered_data = None
-        self.inventory = {
-            'group': {'hosts': []},
-            'vars': [],
-            '_meta': {
-                'hostvars': {}
-            }
-        }
+        self.inventory_header = ('[all:vars]\nanisble_connection=ssh\n'
+                        'ansible_ssh_user=admin\n'
+                        'ansible_ssh_pass=admin\n'
+                        'ansible_ssh_common_args ="-o ConnectionAttempts=20"\n\n'
+                        '[hosts]\n')
+        # self.inventory = {
+        #     'group': {'hosts': []},
+        #     'vars': [],
+        #     '_meta': {
+        #         'hostvars': {}
+        #     }
+        # }
 
     # def get_current_vm_data(self):
     #     """Get current VM data related to the current CLI user.
@@ -38,13 +45,14 @@ class OrkaAnsibleInventory:
         self.spin_up.get_auth_token()
         token = self.spin_up.token
         headers = {
-		'Content-Type': 'application/json', 
-		'Authorization': f"Bearer {token}"
-	}
-        r = requests.get('http://10.221.188.100/resources/vm/list', headers=headers)
+		    'Content-Type': 'application/json', 
+		    'Authorization': f"Bearer {token}",
+            'orka-licensekey': self.orka_license_key
+	    }
+        r = requests.get(f"http://10.221.188.100/resources/vm/list/{self.orka_user}", headers=headers)
         data = r.json()
         self.vm_data = data['virtual_machine_resources']
-        self.spin_up.revoke_orka_auth_token()
+        # self.spin_up.revoke_orka_auth_token()
 
     def get_deployed_vms(self):
         """Filter current VM data to isolate deployed VMs."""
@@ -80,26 +88,45 @@ class OrkaAnsibleInventory:
     #         'ansible_ssh_pass': ansible_ssh_pass
     #     }
 
-    def create_inventory(self):
-        """Create the inventory object to return to Ansible."""
-        hosts = []
-        ansible_ssh_user = os.environ.get('ANSIBLE_SSH_USER')
-        ansible_ssh_pass = os.environ.get('ANSIBLE_SSH_PASS')
+    # def create_inventory(self):
+    #     """Create the inventory object to return to Ansible."""
+    #     hosts = []
+    #     ansible_ssh_user = 'admin'
+    #     ansible_ssh_pass = 'admin'
 
-        for i in self.filtered_data:
-            ip_address = i['status'][0]['virtual_machine_ip']
-            hosts.append(ip_address)
-            self.inventory['_meta']['hostvars'][ip_address] = \
-                {'ansible_ssh_port': i['status'][0]['ssh_port'],
-                'ansible_ssh_user': ansible_ssh_user,
-                'ansible_ssh_pass': ansible_ssh_pass,
-                'ansible_connection': 'ssh'}
+    #     for i in self.filtered_data:
+    #         ip_address = i['status'][0]['virtual_machine_ip']
+    #         hosts.append(ip_address)
+    #         self.inventory['_meta']['hostvars'][ip_address] = \
+    #             {'ansible_ssh_port': i['status'][0]['ssh_port'],
+    #             'ansible_ssh_user': ansible_ssh_user,
+    #             'ansible_ssh_pass': ansible_ssh_pass,
+    #             'ansible_connection': 'ssh'}
 
-        self.inventory['group']['hosts'] = hosts
-        # varss = self._build_vars()
-        # self.inventory['vars'] = varss
-        print(json.dumps(self.inventory))
-        return json.dumps(self.inventory)
+    #     self.inventory['group']['hosts'] = hosts
+    #     # varss = self._build_vars()
+    #     # self.inventory['vars'] = varss
+    #     print(json.dumps(self.inventory))
+    #     return json.dumps(self.inventory)
+
+    def write_inventory(self):
+        """Write current VM data -- sorted or not -- to an 
+        Ansible inventory file.
+        
+        Parameters
+        ----------
+        
+        data: list
+            A list of Python dicts that represent Orka VMs.
+        """
+        with open('inventory', 'w+') as f:
+            f.write(self.inventory_header)
+            for i in self.filtered_data:
+                line = '{}   ansible_ssh_port={}   ansible_ssh_host={}'.format(
+                    i['virtual_machine_name'],
+                    i['status'][0]['ssh_port'],
+                    i['status'][0]['virtual_machine_ip'])
+                f.write(line + '\n')
 
 
 def parse_args():
@@ -118,14 +145,14 @@ def main(args, name_contains):
         inventory_creator = OrkaAnsibleInventory()
         inventory_creator.get_current_vm_data()
         inventory_creator.get_vm_by_host_name(host_name)
-        inventory_creator.create_inventory()
+        inventory_creator.write_inventory()
     elif args.list:
         inventory_creator = OrkaAnsibleInventory()
         inventory_creator.get_current_vm_data()
         inventory_creator.get_deployed_vms()
         if name_contains:
             inventory_creator.get_name_contains_vms(name_contains)
-        inventory_creator.create_inventory()
+        inventory_creator.write_inventory()
     else:
         print('Warning: you must pass either `--list` or `--host <hostname>` argument.')
 
