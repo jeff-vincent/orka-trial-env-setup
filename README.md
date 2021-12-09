@@ -17,6 +17,6 @@ sudo docker run --privileged --name orka_env \
 -e VPN_ADDRESS=<YOUR_IP> \
 -e VPN_USER=<YOUR_USER> \
 -e VPN_SERVER_CERT=<YOUR_SERVERCERT> \
--e -e ORKA_LICENSE_KEY=<YOUR_LICENSE_KEY> \
+-e ORKA_LICENSE_KEY=<YOUR_LICENSE_KEY> \
 trial_env
 ```
